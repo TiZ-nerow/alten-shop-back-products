@@ -10,15 +10,16 @@ export class ProductsService {
 
     private static productslist: Product[] = null;
     private products$: BehaviorSubject<Product[]> = new BehaviorSubject<Product[]>([]);
+    private apiUrl = 'http://127.0.0.1:8000/api';
 
     constructor(private http: HttpClient) { }
 
     getProducts(): Observable<Product[]> {
         if( ! ProductsService.productslist )
         {
-            this.http.get<any>('assets/products.json').subscribe(data => {
-                ProductsService.productslist = data.data;
-                
+            this.http.get<any>(`${this.apiUrl}/products`).subscribe(data => {
+                ProductsService.productslist = data;
+
                 this.products$.next(ProductsService.productslist);
             });
         }
@@ -31,37 +32,45 @@ export class ProductsService {
     }
 
     create(prod: Product): Observable<Product[]> {
+        this.http.post<any>(`${this.apiUrl}/products`, prod).subscribe(data => {
+            ProductsService.productslist.push(data);
 
-        ProductsService.productslist.push(prod);
-        this.products$.next(ProductsService.productslist);
-        
+            this.products$.next(ProductsService.productslist);
+        });
+
         return this.products$;
     }
 
     update(prod: Product): Observable<Product[]>{
-        ProductsService.productslist.forEach(element => {
-            if(element.id == prod.id)
-            {
-                element.name = prod.name;
-                element.category = prod.category;
-                element.code = prod.code;
-                element.description = prod.description;
-                element.image = prod.image;
-                element.inventoryStatus = prod.inventoryStatus;
-                element.price = prod.price;
-                element.quantity = prod.quantity;
-                element.rating = prod.rating;
-            }
+        this.http.put<any>(`${this.apiUrl}/products/${prod.id}`, prod).subscribe(data => {
+            ProductsService.productslist.forEach(element => {
+                if(element.id == data.id)
+                {
+                    element.name = data.name;
+                    element.category = data.category;
+                    element.code = data.code;
+                    element.description = data.description;
+                    element.image = data.image;
+                    element.inventoryStatus = data.inventoryStatus;
+                    element.price = data.price;
+                    element.quantity = data.quantity;
+                    element.rating = data.rating;
+                }
+            });
+
+            this.products$.next(ProductsService.productslist);
         });
-        this.products$.next(ProductsService.productslist);
 
         return this.products$;
     }
 
-
     delete(id: number): Observable<Product[]>{
-        ProductsService.productslist = ProductsService.productslist.filter(value => { return value.id !== id } );
-        this.products$.next(ProductsService.productslist);
+        this.http.delete<any>(`${this.apiUrl}/products/${id}`).subscribe(data => {
+            ProductsService.productslist = ProductsService.productslist.filter(value => value.id !== data.id);
+
+            this.products$.next(ProductsService.productslist);
+        });
+
         return this.products$;
     }
 }

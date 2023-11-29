@@ -58,7 +58,7 @@ class ProductController extends Controller
     public function update(Request $request, string $id)
     {
         $safe = $request->validate([
-            'code'            => 'sometimes|required|max:255|unique:products',
+            'code'            => "sometimes|required|max:255|unique:products,code,$id",
             'name'            => 'sometimes|required|max:255',
             'description'     => 'sometimes|required|max:255',
             'price'           => 'sometimes|required|numeric|min:0',
